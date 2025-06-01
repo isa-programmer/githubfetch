@@ -6,4 +6,4 @@ A neofetch like program for github profiles
 > ./github_fetch.py <your-github-name>
 
 ## Example output
-[example image](https://i.imgur.com/wmycqvf.png "kitty")
+![example image](https://i.imgur.com/wmycqvf.png)
