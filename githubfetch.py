@@ -20,11 +20,12 @@ class Color:
         return f"{color_name}{text}{color.reset}"
         
 color = Color()
-indent = " " * 25
+indent = " " * 22
 username = sys.argv[1]
+github_url = f"github.com/{username}"
 url = f"https://api.github.com/users/{username}"
-
 response = requests.get(url)
+
 if not response.ok:
     print(f"{color.red}Error:{response.status_code}")
     sys.exit()
@@ -37,28 +38,23 @@ try:
                 "left","--scale-up","--place"
                 ,"20x20@0x0",data.get('avatar_url')])
 except FileNotFoundError:
-    print(color.red,"Kitty not installed!")
+    print(color.red,"Kitty Terminal not installed!",color.reset)
     sys.exit()
     
 elements = [
-    {"text":color.color(color.light_blue,"Username:"),"value":data.get('login')},
+    {"text":color.color(color.blue,"Username:"),"value":data.get('login')},
     {"text":color.color(color.yellow,"Repos:"),"value":data.get('public_repos')},
     {"text":color.color(color.green,"Bio:"),"value":data.get('bio','N/A')},
     {"text":color.color(color.red,"From:"),"value":data.get('location','Not Provided')},
     {"text":color.color(color.light_red,"Followers:"),"value":data.get('followers')},
-    {"text":color.color(color.blue,"Following:"),"value":data.get('following')},
+    {"text":color.color(color.light_blue,"Following:"),"value":data.get('following')},
 ]
 
-bar_color = color.yellow
-vertical_bar = color.color(bar_color,"║")
-top_bar = color.color(bar_color,"╔══════════════════════════════════════════╗")
-bottom_bar = color.color(bar_color,"╚══════════════════════════════════════════╝")
 
-print(f"{indent}{top_bar}")
+print(f"{indent} {github_url}")
+print(f"{indent} {'-'*len(github_url)}")
 
 for element in elements:
-    print(f"{indent}{vertical_bar} {element['text']} {element['value']}")
-    
-print(f"{indent}{bottom_bar}")
+    print(f"{indent} {element['text']} {element['value']}")
 
 print("\n\n\n")
