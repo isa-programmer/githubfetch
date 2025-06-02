@@ -7,7 +7,7 @@ A neofetch like program for github profiles
 
 ## Instaling
 ```
-sudo https://raw.githubusercontent.com/isa-programmer/github-fetch/refs/heads/main/githubfetch.py -o /usr/local/bin/githubfetch
+sudo https://raw.githubusercontent.com/isa-programmer/githubfetch/refs/heads/main/githubfetch.py -o /usr/local/bin/githubfetch
 sudo chmod +x /usr/local/bin/githubfetch
 ```
 
