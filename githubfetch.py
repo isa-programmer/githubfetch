@@ -22,7 +22,7 @@ class Color:
 color = Color()
 indent = " " * 22
 username = sys.argv[1]
-github_url = f"github.com/{username}"
+github_url = f"{username}@github.com"
 url = f"https://api.github.com/users/{username}"
 response = requests.get(url)
 
