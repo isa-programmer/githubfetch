@@ -3,9 +3,10 @@
 A neofetch like program for github profiles
 
 ## requirements
-> kitty and python3
+- kitty terminal
+- python3
 
-## Instaling
+## Installing
 ```
 sudo curl https://raw.githubusercontent.com/isa-programmer/githubfetch/refs/heads/main/githubfetch.py -o /usr/local/bin/githubfetch
 sudo chmod +x /usr/local/bin/githubfetch
