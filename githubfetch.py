@@ -42,7 +42,7 @@ except FileNotFoundError:
     sys.exit()
     
 elements = [
-    {"text":color.color(color.blue,"Username:"),"value":data.get('login')},
+    {"text":color.color(color.light_blue,"Username:"),"value":data.get('login')},
     {"text":color.color(color.yellow,"Repos:"),"value":data.get('public_repos')},
     {"text":color.color(color.green,"Bio:"),"value":data.get('bio','N/A') or 'N/A'},
     {"text":color.color(color.red,"From:"),"value":data.get('location','Not Provided')},
