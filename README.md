@@ -17,4 +17,4 @@ sudo chmod +x /usr/local/bin/githubfetch
 githubfetch isa-programmer
 ```
 ## Example output
-![example image](https://i.imgur.com/DQLX6I3.png)
+![example image](https://i.imgur.com/NdmszFZ.png)
