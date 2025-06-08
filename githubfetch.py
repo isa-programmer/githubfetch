@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 if len(sys.argv) < 2:
-    print("Usage: ./github_fetch.py <your-github-name>")
+    print(f"Usage: {sys.argv[0]} <your-github-username>")
     sys.exit(1)
 
 class Color:
