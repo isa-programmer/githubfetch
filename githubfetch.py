@@ -1,11 +1,12 @@
 #!/usr/bin/python3
+
 import requests
 import subprocess
 import sys
 
 if len(sys.argv) < 2:
     print("Usage: ./github_fetch.py <your-github-name>")
-    sys.exit()
+    sys.exit(1)
 
 class Color:
     def __init__(self):
@@ -16,6 +17,7 @@ class Color:
         self.light_red = "\x1b[38;5;9m"
         self.blue = "\x1b[38;5;21m"
         self.reset = "\x1b[00m"
+        
     def color(self,color_name,text):
         return f"{color_name}{text}{color.reset}"
         
@@ -28,18 +30,19 @@ response = requests.get(url)
 
 if not response.ok:
     print(f"{color.red}Error:{response.status_code}")
-    sys.exit()
+    sys.exit(1)
 
 data = response.json()
 
 try:
     subprocess.run([
-                "kitten","icat","--align",
-                "left","--scale-up","--place"
-                ,"20x20@0x0",data.get('avatar_url')])
+                "kitten", "icat", "--align",
+                "left", "--scale-up", "--place",
+                "20x20@0x0", data.get('avatar_url')])
+    
 except FileNotFoundError:
-    print(color.red,"Kitty Terminal not installed!",color.reset)
-    sys.exit()
+    print(color.red,"Kitty Terminal not installed!", color.reset)
+    sys.exit(1)
     
 elements = [
     {"text":color.color(color.light_blue,"Username:"),"value":data.get('login')},
