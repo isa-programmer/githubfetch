@@ -34,6 +34,11 @@ if not response.ok:
 
 data = response.json()
 
+starred_url = f"https://api.github.com/users/{username}/starred"
+starred_repos = requests.get(starred_url) 
+data_starred = starred_repos.json()
+starred_count = len(data_starred)
+
 try:
     subprocess.run([
                 "kitten", "icat", "--align",
@@ -51,6 +56,7 @@ elements = [
     {"text":color.color(color.red,"From:"),"value":data.get('location','Not Provided')},
     {"text":color.color(color.light_red,"Followers:"),"value":data.get('followers')},
     {"text":color.color(color.light_blue,"Following:"),"value":data.get('following')},
+    {"text":color.color(color.yellow,"Starred repos:"),"value":starred_count},
 ]
 
 
