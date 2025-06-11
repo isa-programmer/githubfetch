@@ -141,29 +141,47 @@ def display_user_info(data, starred_count, username):
 use_ascii = True
 align_bottom = False
 
-def render_ascii(image_url, width=30):
+def render_ascii(image_url, width=30, style='bold', use_color=True):
     try:
+        # Dynamic style selection
+        styles = {
+            'bold': "@%#*+=-:. "[::-1],
+            'fine': ".,:;i1tfLCG08@"[::-1],
+            'block': " ░▒▓█"[::-1],
+            'retro': " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+        }
+        chars = styles.get(style, styles['bold'])
+
         response = requests.get(image_url)
         image = Image.open(BytesIO(response.content)).convert('L')
+
+        # Auto-size to terminal
+        import os
+        max_width = os.get_terminal_size().columns - 10
+        width = min(width, max_width)
+
         aspect_ratio = image.height / image.width
         height = int(aspect_ratio * width * 0.55)
         image = image.resize((width, height))
 
-        chars = ".,:;irsXA253hMHGS#9B&@"[::-1]
         ascii_image = []
-
         for y in range(height):
             line = ""
             for x in range(width):
                 pixel = image.getpixel((x, y))
-                char = chars[pixel * len(chars) // 256]
-                color_code = f"\x1b[38;5;{232 + int(pixel / 255 * 23)}m"
-                line += f"{color_code}{char}{color.reset}"
+                char = chars[min(len(chars)-1, pixel * len(chars) // 256)]
+
+                if use_color:
+                    color_code = f"\x1b[38;5;{232 + (pixel * 23 // 255)}m"
+                    line += f"{color_code}{char}\x1b[0m"
+                else:
+                    line += char
             ascii_image.append(line)
 
         return ascii_image
+
     except Exception as e:
-        print(color.color(color.red, f"[!] ASCII rendering failed: {e}"))
+        print(f"\x1b[31m[!] Error: {e}\x1b[0m", file=sys.stderr)
         return []
 
 ## Render Layout
@@ -193,39 +211,67 @@ def get_user_info_lines(data, starred_count, username):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: githubfetch <username> [--heatmap]")
+        print("Usage: githubfetch <username> [--ascii[=style]] [--heatmap] [--nocolor]")
+        print("Available styles: bold, fine, block, sketch, invert, minimal, retro")
         sys.exit(1)
 
     if sys.argv[1] in ['--help', '-h']:
-        print("Usage: githubfetch <username> [--ascii] [--heatmap]")
-        print("  --ascii : show avatar as ASCII art")
-        print("  --heatmap : show contribution graph (requires GITHUB_TOKEN)")
-        print("  -h, --help : show this help message and exit")
+        print("GitHub User Fetcher with Enhanced ASCII Art")
+        print("Usage: githubfetch <username> [options]")
+        print("\nOptions:")
+        print("  --ascii[=style]  Show avatar as ASCII art (default: bold)")
+        print("                   Available styles:")
+        print("                   - bold: Thick characters (@%#*)")
+        print("                   - fine: Thin characters (.,:;)")
+        print("                   - block: Block characters (█▓▒░)")
+        print("                   - retro: Classic terminal look")
+        print("  --nocolor        Disable colored ASCII output")
+        print("  --heatmap        Show contribution graph (requires GITHUB_TOKEN)")
+        print("  -h, --help       Show this help message")
         sys.exit(0)
 
     username = sys.argv[1]
     heatmap = '--heatmap' in sys.argv
+    use_color = '--nocolor' not in sys.argv
+
+    # Parse ASCII style
+    ascii_style = 'bold'
+    for arg in sys.argv:
+        if arg.startswith('--ascii='):
+            ascii_style = arg.split('=')[1].lower()
+        elif arg == '--ascii':
+            ascii_style = 'bold'  # default
 
     try:
         user_data = get_user_data(username)
         starred_count = get_starred_count(username)
-        if '--ascii' in sys.argv:
-            ascii_block = render_ascii(user_data.get('avatar_url'))
+
+        if '--ascii' in sys.argv or any(a.startswith('--ascii=') for a in sys.argv):
+            ascii_block = render_ascii(
+                user_data.get('avatar_url'),
+                style=ascii_style,
+                use_color=use_color
+            )
             info_block = get_user_info_lines(user_data, starred_count, username)
             render_layout(ascii_block, info_block)
         else:
-            display_avatar(user_data.get('avatar_url'))
-            display_user_info(user_data, starred_count, username)
+            if use_color:
+                display_avatar(user_data.get('avatar_url'))
+            else:
+                # Display grayscale avatar if --nocolor
+                img = Image.open(BytesIO(requests.get(user_data.get('avatar_url')).content).convert('L'))
+                img.show()
 
+            display_user_info(user_data, starred_count, username)
 
         if heatmap:
             token = os.getenv("GITHUB_TOKEN")
             if not token:
-                print(color.color(color.yellow, "Warning: GITHUB_TOKEN not set. Skipping heatmap."))
+                print("\x1b[33mWarning: GITHUB_TOKEN not set. Skipping heatmap.\x1b[0m", file=sys.stderr)
             else:
                 contributions = fetch_contributions(username)
                 display_contributions(contributions)
 
     except Exception as e:
-        print(color.color(color.red, str(e)))
+        print(f"\x1b[31mError: {str(e)}\x1b[0m", file=sys.stderr)
         sys.exit(1)
