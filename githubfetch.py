@@ -4,6 +4,8 @@ import requests
 import subprocess
 import sys
 import os
+from PIL import Image
+from io import BytesIO
 
 class Color:
     def __init__(self):
@@ -14,10 +16,8 @@ class Color:
         self.light_red = "\x1b[38;5;9m"
         self.blue = "\x1b[38;5;21m"
         self.reset = "\x1b[00m"
-        
     def color(self,color_name,text):
         return f"{color_name}{text}{color.reset}"
-    
 color = Color()
 
 def get_headers():
@@ -92,7 +92,6 @@ def display_contributions(weeks):
         4: "\x1b[48;5;40m",   # light green
     }
     reset = "\x1b[0m"
-    
     print("\n" + " " * 22 + "GitHub Contributions (Past Year):")
     for row in range(7):
         line = " " * 22
@@ -137,13 +136,69 @@ def display_user_info(data, starred_count, username):
 
     print("\n")
 
+
+## Rending ASCII
+use_ascii = True
+align_bottom = False
+
+def render_ascii(image_url, width=30):
+    try:
+        response = requests.get(image_url)
+        image = Image.open(BytesIO(response.content)).convert('L')
+        aspect_ratio = image.height / image.width
+        height = int(aspect_ratio * width * 0.55)
+        image = image.resize((width, height))
+
+        chars = ".,:;irsXA253hMHGS#9B&@"[::-1]
+        ascii_image = []
+
+        for y in range(height):
+            line = ""
+            for x in range(width):
+                pixel = image.getpixel((x, y))
+                char = chars[pixel * len(chars) // 256]
+                color_code = f"\x1b[38;5;{232 + int(pixel / 255 * 23)}m"
+                line += f"{color_code}{char}{color.reset}"
+            ascii_image.append(line)
+
+        return ascii_image
+    except Exception as e:
+        print(color.color(color.red, f"[!] ASCII rendering failed: {e}"))
+        return []
+
+## Render Layout
+def render_layout(ascii_lines, info_lines, align='top'):
+    max_lines = max(len(ascii_lines), len(info_lines))
+    pad_ascii = max_lines - len(ascii_lines)
+    pad_info = max_lines - len(info_lines)
+
+    ascii_lines += [''] * pad_ascii
+    info_lines += [''] * pad_info
+
+    for a, b in zip(ascii_lines, info_lines):
+        print(f"{a:<45}  {b}")
+
+def get_user_info_lines(data, starred_count, username):
+    url = f"{username}@github.com"
+    lines = [
+        f"{color.color(color.blue, 'Username:')} {data.get('login')}",
+        f"{color.color(color.yellow, 'Repos:')} {data.get('public_repos')}",
+        f"{color.color(color.green, 'Bio:')} {data.get('bio') or 'N/A'}",
+        f"{color.color(color.red, 'From:')} {data.get('location') or 'Not Provided'}",
+        f"{color.color(color.light_red, 'Followers:')} {data.get('followers')}",
+        f"{color.color(color.light_blue, 'Following:')} {data.get('following')}",
+        f"{color.color(color.yellow, 'Starred repos:')} {starred_count}"
+    ]
+    return [f"{' ' * 2}{url}", ' ' * 2 + '-' * len(url)] + lines
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Usage: githubfetch <username> [--heatmap]")
         sys.exit(1)
 
     if sys.argv[1] in ['--help', '-h']:
-        print("Usage: githubfetch <username> [--heatmap]")
+        print("Usage: githubfetch <username> [--ascii] [--heatmap]")
+        print("  --ascii : show avatar as ASCII art")
         print("  --heatmap : show contribution graph (requires GITHUB_TOKEN)")
         print("  -h, --help : show this help message and exit")
         sys.exit(0)
@@ -154,8 +209,14 @@ if __name__ == '__main__':
     try:
         user_data = get_user_data(username)
         starred_count = get_starred_count(username)
-        display_avatar(user_data.get('avatar_url'))
-        display_user_info(user_data, starred_count, username)
+        if '--ascii' in sys.argv:
+            ascii_block = render_ascii(user_data.get('avatar_url'))
+            info_block = get_user_info_lines(user_data, starred_count, username)
+            render_layout(ascii_block, info_block)
+        else:
+            display_avatar(user_data.get('avatar_url'))
+            display_user_info(user_data, starred_count, username)
+
 
         if heatmap:
             token = os.getenv("GITHUB_TOKEN")
@@ -168,4 +229,3 @@ if __name__ == '__main__':
     except Exception as e:
         print(color.color(color.red, str(e)))
         sys.exit(1)
-
