@@ -143,18 +143,31 @@ def display_user_info(data, starred_count, username):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: githubfetch <your-github-username>")
+        print("Usage: githubfetch <username> [--heatmap]")
         sys.exit(1)
 
+    if sys.argv[1] in ['--help', '-h']:
+        print("Usage: githubfetch <username> [--heatmap]")
+        print("  --heatmap : show contribution graph (requires GITHUB_TOKEN)")
+        print("  -h, --help : show this help message and exit")
+        sys.exit(0)
+
     username = sys.argv[1]
+    heatmap = '--heatmap' in sys.argv
 
     try:
         user_data = get_user_data(username)
         starred_count = get_starred_count(username)
         display_avatar(user_data.get('avatar_url'))
         display_user_info(user_data, starred_count, username)
-        contributions = fetch_contributions(username)
-        display_contributions(contributions)
+
+        if heatmap:
+            token = os.getenv("GITHUB_TOKEN")
+            if not token:
+                print(color.color(color.yellow, "Warning: GITHUB_TOKEN not set. Skipping heatmap."))
+            else:
+                contributions = fetch_contributions(username)
+                display_contributions(contributions)
 
     except Exception as e:
         print(color.color(color.red, str(e)))
