@@ -5,10 +5,6 @@ import subprocess
 import sys
 import os
 
-if len(sys.argv) < 2:
-    print(f"Usage: githubfetch <your-github-username>")
-    sys.exit(1)
-
 class Color:
     def __init__(self):
         self.red = "\x1b[38;5;1m"
@@ -27,7 +23,7 @@ color = Color()
 def get_headers():
     token = os.getenv("GITHUB_TOKEN")
     if not token:
-        raise Exception("Set the GITHUB_TOKEN environment variable.")
+        return {}
     return {"Authorization": f"Bearer {token}"}
 
 def get_user_data(username):
