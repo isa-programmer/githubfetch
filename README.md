@@ -29,5 +29,33 @@ $ githubfetch isa-programmer
 $ githubfetch <github-username> --heatmap
 ```
 
+
+```bash
+$ githubfetch <github-username> --ascii[=style]
+```
+
+### Options
+
+| Style   | Description                          | Example Characters |
+|---------|--------------------------------------|--------------------|
+| `bold`  | Thick, high-contrast characters     | `@%#*+=-:.`        |
+| `fine`  | Thin, detailed characters           | `.,:;i1tfLCG08@`   |
+| `retro` | Classic terminal look               | ` .'`^",:;Il!i><~` |
+| `block` | Solid block characters              | ` ░▒▓█`            |
+
+
+### Examples
+
+```bash
+# Default bold style
+$ githubfetch <github-username> --ascii
+
+# Retro style
+$ githubfetch <github-username> --ascii=retro
+
+# Block style without color
+$ githubfetch <github-username> --ascii=block --nocolor
+```
+
 ## Example output
 ![example image](https://i.imgur.com/NdmszFZ.png)
