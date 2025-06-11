@@ -12,6 +12,47 @@ $ sudo curl https://raw.githubusercontent.com/isa-programmer/githubfetch/refs/he
 $ sudo chmod +x /usr/local/bin/githubfetch
 ```
 
+## To try it
+
+Clone repo
+
+```bash
+git pull git@github.com:isa-programmer/githubfetch.git
+```
+
+Move to githubfetch folder
+
+```bash
+cd githubfetch/
+```
+
+Create a virtual envieroment (Optional):
+
+* To Linux or MacOs:
+```bash
+python -m venv venv 
+. ./venv/bin/activate
+```
+
+* To Windows:
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+Install requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run it:
+
+```bash
+python githubfetch.py <github-username>
+```
+
 ### Optional: Contribution heatmap
 Displaying the contribution heatmap along with basic user info requires a GitHub personal access token. Create one from [here](https://github.com/settings/tokens) with ```read:user``` scope, then add this line to your .bashrc or other shell config
 ```
