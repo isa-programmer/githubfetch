@@ -3,6 +3,7 @@
 import requests
 import subprocess
 import sys
+import os
 
 if len(sys.argv) < 2:
     print(f"Usage: githubfetch <your-github-username>")
@@ -31,12 +32,81 @@ def get_starred_count(username):
     response = requests.get(user_url)
     return response.json()
 
+def fetch_contributions(username):
+    url = "https://api.github.com/graphql"
+    token = os.getenv("GITHUB_TOKEN")
+    if not token:
+        raise Exception("Set GITHUB_TOKEN env var")
+    headers = {"Authorization": f"bearer {token}"}
+    query = """
+    query($login:String!) {
+      user(login:$login) {
+        contributionsCollection {
+          contributionCalendar {
+            weeks {
+              contributionDays {
+                date
+                contributionCount
+              }
+            }
+          }
+        }
+      }
+    }"""
+    variables = {"login": username}
+    resp = requests.post(url, json={"query": query, "variables": variables}, headers=headers)
+    data = resp.json()
+    weeks_data = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
+    # Convert to levels
+    weeks = []
+    for week in weeks_data:
+        levels = []
+        for day in week["contributionDays"]:
+            count = day["contributionCount"]
+            levels.append(classify_level(count))
+        weeks.append(levels)
+    return weeks
+
+def classify_level(count):
+    if count == 0:
+        return 0
+    elif count < 3:
+        return 1
+    elif count < 6:
+        return 2
+    elif count < 10:
+        return 3
+    else:
+        return 4
+
+def display_contributions(weeks):
+    colors = {
+        0: "\x1b[48;5;232m",  # dark gray
+        1: "\x1b[48;5;22m",   # dark green
+        2: "\x1b[48;5;28m",   # green
+        3: "\x1b[48;5;34m",   # bright green
+        4: "\x1b[48;5;40m",   # light green
+    }
+    reset = "\x1b[0m"
+    
+    print("\n" + " " * 22 + "GitHub Contributions (Past Year):")
+    for row in range(7):  # 7 days a week
+        line = " " * 22
+        for week in weeks:
+            if row < len(week):
+                level = week[row]
+                color_block = f"{colors.get(level, colors[0])}  {reset}"
+                line += color_block
+            else:
+                line += "  "
+        print(line)
+
 def display_avatar(image_url):
     try:
         subprocess.run([
                 "kitten", "icat", "--align",
                 "left", "--scale-up", "--place",
-                "20x20@0x0", image_url])
+                "20x20@0x2", image_url])
     
     except FileNotFoundError:
         print(color.red,"Kitty Terminal not installed!", color.reset)
@@ -78,6 +148,8 @@ if __name__ == '__main__':
         data_starred = len(starred_count)
         display_avatar(user_data.get('avatar_url'))
         display_user_info(user_data, data_starred, username)
+        contributions = fetch_contributions(username)
+        display_contributions(contributions)
 
     except Exception as e:
         print(color.color(color.red, str(e)))
