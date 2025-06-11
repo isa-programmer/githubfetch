@@ -34,8 +34,8 @@ def get_user_data(username):
     return response.json()
 
 def get_starred_count(username):
-    user_url = f"https://api.github.com/users/{username}/starred"
-    response = requests.get(user_url, headers=get_headers())
+    starred_url = f"https://api.github.com/users/{username}/starred"
+    response = requests.get(starred_url, headers=get_headers())
     if response.status_code != 200:
         return 0
     return len(response.json())
