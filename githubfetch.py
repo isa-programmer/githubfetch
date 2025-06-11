@@ -22,22 +22,31 @@ class Color:
     def color(self,color_name,text):
         return f"{color_name}{text}{color.reset}"
     
+color = Color()
+
+def get_headers():
+    token = os.getenv("GITHUB_TOKEN")
+    if not token:
+        raise Exception("Set the GITHUB_TOKEN environment variable.")
+    return {"Authorization": f"Bearer {token}"}
+
 def get_user_data(username):
     user_url = f"https://api.github.com/users/{username}"
-    response = requests.get(user_url)
+    response = requests.get(user_url, headers=get_headers())
+    if response.status_code != 200:
+        raise Exception(f"Error: {response.status_code} - {response.json().get('message')}")
     return response.json()
 
 def get_starred_count(username):
     user_url = f"https://api.github.com/users/{username}/starred"
-    response = requests.get(user_url)
-    return response.json()
+    response = requests.get(user_url, headers=get_headers())
+    if response.status_code != 200:
+        return 0
+    return len(response.json())
 
 def fetch_contributions(username):
     url = "https://api.github.com/graphql"
-    token = os.getenv("GITHUB_TOKEN")
-    if not token:
-        raise Exception("Set GITHUB_TOKEN env var")
-    headers = {"Authorization": f"bearer {token}"}
+    headers = get_headers()
     query = """
     query($login:String!) {
       user(login:$login) {
@@ -57,7 +66,6 @@ def fetch_contributions(username):
     resp = requests.post(url, json={"query": query, "variables": variables}, headers=headers)
     data = resp.json()
     weeks_data = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
-    # Convert to levels
     weeks = []
     for week in weeks_data:
         levels = []
@@ -90,7 +98,7 @@ def display_contributions(weeks):
     reset = "\x1b[0m"
     
     print("\n" + " " * 22 + "GitHub Contributions (Past Year):")
-    for row in range(7):  # 7 days a week
+    for row in range(7):
         line = " " * 22
         for week in weeks:
             if row < len(week):
@@ -107,7 +115,6 @@ def display_avatar(image_url):
                 "kitten", "icat", "--align",
                 "left", "--scale-up", "--place",
                 "20x20@0x2", image_url])
-    
     except FileNotFoundError:
         print(color.red,"Kitty Terminal not installed!", color.reset)
         sys.exit(1)
@@ -139,18 +146,17 @@ if __name__ == '__main__':
         print("Usage: githubfetch <your-github-username>")
         sys.exit(1)
 
-    color = Color()
     username = sys.argv[1]
 
     try:
         user_data = get_user_data(username)
         starred_count = get_starred_count(username)
-        data_starred = len(starred_count)
         display_avatar(user_data.get('avatar_url'))
-        display_user_info(user_data, data_starred, username)
+        display_user_info(user_data, starred_count, username)
         contributions = fetch_contributions(username)
         display_contributions(contributions)
 
     except Exception as e:
         print(color.color(color.red, str(e)))
         sys.exit(1)
+
