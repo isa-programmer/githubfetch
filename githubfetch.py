@@ -109,14 +109,14 @@ def display_avatar(image_url):
         ["kitten", "icat", "--align", "left", "--scale-up", "--place", "20x20@0x2", image_url],
         ["kitty", "+kitten", "icat", "--align", "left", "--scale-up", "--place", "20x20@0x2", image_url]
     ]
-    
+
     for cmd in commands:
         try:
             subprocess.run(cmd, check=True)
             return  # Success
         except (FileNotFoundError, subprocess.CalledProcessError):
             continue  # Try next command
-    
+
     print(color.red, "Kitty Terminal not installed!", color.reset)
     sys.exit(1)
 
@@ -143,7 +143,7 @@ def display_user_info(data, starred_count, username):
     print("\n")
 
 
-## Rending ASCII
+## Rendering ASCII
 use_ascii = True
 align_bottom = False
 
