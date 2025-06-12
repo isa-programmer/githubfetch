@@ -1,48 +1,60 @@
-# Githubfetch
 
-A Neofetch-Like program for Github profiles
+# GitHubFetch
 
-## Requirements
-- Kitty terminal
-- python3
-- ImageMagick
+A **Neofetch-like** CLI tool that beautifully displays GitHub profile information in your terminal — complete with ASCII art and contribution heatmaps.
 
-## Installing
-```
-$ sudo curl https://raw.githubusercontent.com/isa-programmer/githubfetch/refs/heads/main/githubfetch.py -o /usr/local/bin/githubfetch
-$ sudo chmod +x /usr/local/bin/githubfetch
-```
+
+## ✨ Features
+
+- GitHub user info with bio, followers, repos, etc.
+- ASCII-rendered GitHub profile picture (multiple styles)
+- Contribution heatmap visualization
+- Works in your terminal — especially tailored for **Kitty**
+
+
+## 🔧 Requirements
+
+For local (non-Docker) usage:
+
+- Python 3.7+
+- [Kitty Terminal](https://sw.kovidgoyal.net/kitty/) (for advanced rendering)
+- [ImageMagick](https://imagemagick.org/) (for image-to-ASCII conversion)
+
+
+## Installing (Standalone)
+
+```bash
+sudo curl https://raw.githubusercontent.com/isa-programmer/githubfetch/refs/heads/main/githubfetch.py -o /usr/local/bin/githubfetch
+sudo chmod +x /usr/local/bin/githubfetch
+````
+
 
 ## Development Setup
 
-Clone repo
+Clone the repository:
 
 ```bash
-git clones git@github.com:isa-programmer/githubfetch.git
-```
-
-Move to githubfetch folder
-
-```bash
+git clone git@github.com:isa-programmer/githubfetch.git
 cd githubfetch/
 ```
 
-Create a virtual environment (Optional):
+Set up virtual environment (optional but recommended):
 
-* To Linux or MacOs:
+### For Linux/macOS:
+
 ```bash
-python -m venv venv 
-. ./venv/bin/activate
+python -m venv venv
+source venv/bin/activate
 ```
 
-* To Windows:
+### For Windows:
 
 ```bash
 python -m venv venv
 venv\Scripts\activate
 ```
 
-Install requirements:
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -54,49 +66,128 @@ Run locally:
 python githubfetch.py <github-username>
 ```
 
-## Usage
-### Basic user info
-```
-$ githubfetch isa-programmer
-```
+---
 
-### With contribution heatmap
-```
-$ githubfetch <github-username> --heatmap
-```
+## Docker Usage
 
+### Build the image
 
 ```bash
-$ githubfetch <github-username> --ascii[=style]
+docker build -t gitfetch:latest .
 ```
 
-### Options
-
-| Style   | Description                          | Example Characters |
-|---------|--------------------------------------|--------------------|
-| `bold`  | Thick, high-contrast characters     | `@%#*+=-:.`        |
-| `fine`  | Thin, detailed characters           | `.,:;i1tfLCG08@`   |
-| `retro` | Classic terminal look               | ` .'`^",:;Il!i><~` |
-| `block` | Solid block characters              | ` ░▒▓█`            |
-
-### Optional: Contribution heatmap
-Displaying the contribution heatmap along with basic user info requires a GitHub personal access token. Create one from [here](https://github.com/settings/tokens) with ```read:user``` scope, then add this line to your .bashrc or other shell config
-```
-export GITHUB_TOKEN="your_personal_access_token_here"
-```
-
-### Examples
+### ▶️ Run the CLI
 
 ```bash
-# Default bold style
-$ githubfetch <github-username> --ascii
-
-# Retro style
-$ githubfetch <github-username> --ascii=retro
-
-# Block style without color
-$ githubfetch <github-username> --ascii=block --nocolor
+docker run -it gitfetch:latest <github-username> [options]
 ```
+
+### ✅ Examples
+
+```bash
+# Basic usage
+docker run -it gitfetch:latest <github-username> --ascii --heatmap
+
+# With GitHub token (inline)
+docker run -it --env GITHUB_TOKEN="your_token" gitfetch:latest <github-username> --ascii --heatmap
+
+# Using .env file
+docker run -it --env-file .env gitfetch:latest <github-username> --ascii --heatmap
+```
+
+> **Note**: Always use `-it` for proper terminal output support.
+
+---
+
+## ⚙️ Options & Flags
+
+### 🔹 Basic Info
+
+```bash
+githubfetch <github-username>
+```
+
+### 🔹 With ASCII Avatar
+
+```bash
+githubfetch <github-username> --ascii[=style]
+```
+
+### 🔹 With Contribution Heatmap
+
+```bash
+githubfetch <github-username> --heatmap
+```
+
+### 🔹 ASCII Styles
+
+| Style   | Description               | Example Characters   |
+| ------- | ------------------------- | -------------------- |
+| `bold`  | Thick, high-contrast      | `@%#*+=-:.`          |
+| `fine`  | Thin, detailed characters | `.,:;i1tfLCG08@`     |
+| `retro` | Classic terminal style    | ` .'`^",:;Il!i><\~\` |
+| `block` | Solid block-based look    | ` ░▒▓█`              |
+
+You can also disable color rendering with `--nocolor`.
+
+---
+
+## Using GitHub Token (for heatmap or high-rate API access)
+
+Authenticated requests are needed for:
+
+* Contribution heatmap
+* Higher API rate limits
+* Private info (if token has permissions)
+
+### Set the token:
+
+#### Option 1: Shell Config (recommended for local use)
+
+```bash
+export GITHUB_TOKEN="your_personal_access_token"
+```
+
+#### Option 2: Docker `.env` file
+
+Create `.env` file:
+
+```env
+GITHUB_TOKEN=your_personal_access_token
+```
+
+Then run with:
+
+```bash
+docker run -it --env-file .env gitfetch:latest <username> --ascii --heatmap
+```
+---
+
+## Examples
+
+```bash
+# Default style
+githubfetch <github-username> --ascii
+
+# Retro ASCII
+githubfetch <github-username> --ascii=retro
+
+# Block style, no color
+githubfetch <github-username> --ascii=block --nocolor
+
+# Heatmap with ASCII
+githubfetch <github-username> --ascii --heatmap
+```
+
+
+## 🤝 Contributing
+
+Contributions, issues and feature requests are welcome!
+
+1. Fork the repo
+2. Create a new branch
+3. Submit a PR
+
 
 ## Example output
 ![example image](https://i.imgur.com/NdmszFZ.png)
