@@ -85,24 +85,26 @@ def classify_level(count):
 
 def display_contributions(weeks):
     colors = {
-        0: "\x1b[48;5;232m",  # dark gray
-        1: "\x1b[48;5;22m",   # dark green
-        2: "\x1b[48;5;28m",   # green
-        3: "\x1b[48;5;34m",   # bright green
-        4: "\x1b[48;5;40m",   # light green
+        0: "",  # Dark gray
+        1: "\x1b[48;5;22m",   # Dark green
+        2: "\x1b[48;5;28m",   # Medium green
+        3: "\x1b[48;5;34m",   # Bright green
+        4: "\x1b[48;5;40m",    # Light green
     }
     reset = "\x1b[0m"
-    print("\n" + " " * 22 + "GitHub Contributions (Past Year):")
+
+    print("\nGitHub Contributions (Past Year):\n")
     for row in range(7):
-        line = " " * 22
+        line = ""
         for week in weeks:
             if row < len(week):
                 level = week[row]
-                color_block = f"{colors.get(level, colors[0])}  {reset}"
-                line += color_block
+                line += f"{colors.get(level, colors[0])}  {reset}"
             else:
                 line += "  "
         print(line)
+
+    print("\n" + "Less " + "".join(f"{colors[i]}  {reset}" for i in range(5)) + " More")
 
 def display_avatar(image_url):
     commands = [
