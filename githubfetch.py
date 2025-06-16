@@ -149,7 +149,7 @@ def display_avatar(image_url):
         print(f"\033_Gf=100,a=T,C=1;{encoded}\033\\", end="")
 
     except Exception as e:
-        print("Hata:", e)
+        print("Error:", e)
         sys.exit(1)
 
 
