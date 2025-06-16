@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import requests
+import base64
+import urllib.request
 import subprocess
 import sys
 import os
@@ -107,20 +109,34 @@ def display_contributions(weeks):
     print("\n" + "Less " + "".join(f"{colors[i]}  {reset}" for i in range(5)) + " More")
 
 def display_avatar(image_url):
-    commands = [
-        ["kitten", "icat", "--align", "left", "--scale-up", "--place", "20x20@0x2", image_url],
-        ["kitty", "+kitten", "icat", "--align", "left", "--scale-up", "--place", "20x20@0x2", image_url]
-    ]
+    try:
+        # Download the image
+        response = requests.get(image_url)
+        response.raise_for_status()
 
-    for cmd in commands:
-        try:
-            subprocess.run(cmd, check=True)
-            return  # Success
-        except (FileNotFoundError, subprocess.CalledProcessError):
-            continue  # Try next command
+        # Open the image with pillow
+        img = Image.open(BytesIO(response.content))
 
-    print(color.red, "Kitty Terminal not installed!", color.reset)
-    sys.exit(1)
+        # Resize the image
+        img = img.resize((180, 180))
+
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        image_data = buf.getvalue()
+
+        # Base64 encode
+        encoded = base64.b64encode(image_data).decode("utf-8")
+
+        # Kitty Graphics Protocol 
+        # _Gf=100 == PNG
+        # a=T == transmit data and display image
+        # C=1 == Cursor movement policy to not to move cursor.
+        print(f"\033_Gf=100,a=T,C=1;{encoded}\033\\", end="")
+
+    except Exception as e:
+        print("Hata:", e)
+        sys.exit(1)
+
 
 def display_user_info(data, starred_count, username):
     github_url = f"{username}@github.com"
@@ -269,8 +285,8 @@ if __name__ == '__main__':
                 # Display grayscale avatar if --nocolor
                 img = Image.open(BytesIO(requests.get(user_data.get('avatar_url')).content).convert('L'))
                 img.show()
-
             display_user_info(user_data, starred_count, username)
+
 
         if heatmap:
             token = os.getenv("GITHUB_TOKEN")
