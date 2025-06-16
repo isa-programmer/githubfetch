@@ -2,8 +2,6 @@
 
 import requests
 import base64
-import urllib.request
-import subprocess
 import sys
 import os
 from PIL import Image
