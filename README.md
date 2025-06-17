@@ -17,7 +17,7 @@ A **Neofetch-like** CLI tool that beautifully displays GitHub profile informatio
 For local (non-Docker) usage:
 
 - Python 3.7+
-- [Kitty Terminal](https://sw.kovidgoyal.net/kitty/) (for advanced rendering)
+- [Terminal Emulators that have imlemented kitty terminal graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/)
 - [ImageMagick](https://imagemagick.org/) (for image-to-ASCII conversion)
 
 
@@ -70,29 +70,23 @@ python githubfetch.py <github-username>
 
 ## Docker Usage
 
-### Build the image
-
-```bash
-docker build -t gitfetch:latest .
-```
-
 ### ▶️ Run the CLI
 
 ```bash
-docker run -it gitfetch:latest <github-username> [options]
+docker run -it ghcr.io/isa-programmer/githubfetch:latest <github-username> [options]
 ```
 
 ### ✅ Examples
 
 ```bash
 # Basic usage
-docker run -it gitfetch:latest <github-username> --ascii --heatmap
+docker run -it ghcr.io/isa-programmer/githubfetch:latest <github-username> --ascii --heatmap
 
 # With GitHub token (inline)
-docker run -it --env GITHUB_TOKEN="your_token" gitfetch:latest <github-username> --ascii --heatmap
+docker run -it --env GITHUB_TOKEN="your_token" ghcr.io/isa-programmer/githubfetch:latest <github-username> --ascii --heatmap
 
 # Using .env file
-docker run -it --env-file .env gitfetch:latest <github-username> --ascii --heatmap
+docker run -it --env-file .env ghcr.io/isa-programmer/githubfetch:latest <github-username> --ascii --heatmap
 ```
 
 > **Note**: Always use `-it` for proper terminal output support.
@@ -159,7 +153,7 @@ GITHUB_TOKEN=your_personal_access_token
 Then run with:
 
 ```bash
-docker run -it --env-file .env gitfetch:latest <username> --ascii --heatmap
+docker run -it --env-file .env ghcr.io/isa-programmer/githubfetch:latest <username> --ascii --heatmap
 ```
 ---
 
