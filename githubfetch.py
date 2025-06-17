@@ -2,11 +2,9 @@
 
 import requests
 import base64
-import sys
-import termios
-import tty
-import os
 import sixel
+import sys
+import os
 from PIL import Image
 from io import BytesIO
 
