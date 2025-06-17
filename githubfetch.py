@@ -8,7 +8,6 @@ import os
 from PIL import Image
 from io import BytesIO
 
-
 class Color:
     def __init__(self):
         self.red = "\x1b[38;5;1m"
@@ -22,16 +21,13 @@ class Color:
     def color(self, color_name, text):
         return f"{color_name}{text}{color.reset}"
 
-
 color = Color()
-
 
 def get_headers():
     token = os.getenv("GITHUB_TOKEN")
     if not token:
         return {}
     return {"Authorization": f"Bearer {token}"}
-
 
 def get_user_data(username):
     user_url = f"https://api.github.com/users/{username}"
@@ -42,14 +38,12 @@ def get_user_data(username):
         )
     return response.json()
 
-
 def get_starred_count(username):
     starred_url = f"https://api.github.com/users/{username}/starred"
     response = requests.get(starred_url, headers=get_headers())
     if response.status_code != 200:
         return 0
     return len(response.json())
-
 
 def fetch_contributions(username):
     url = "https://api.github.com/graphql"
@@ -86,7 +80,6 @@ def fetch_contributions(username):
         weeks.append(levels)
     return weeks
 
-
 def classify_level(count):
     if count == 0:
         return 0
@@ -98,7 +91,6 @@ def classify_level(count):
         return 3
     else:
         return 4
-
 
 def display_contributions(weeks):
     colors = {
@@ -123,7 +115,6 @@ def display_contributions(weeks):
 
     print("\n" + "Less " + "".join(f"{colors[i]}  {reset}" for i in range(5)) + " More")
 
-
 def detect_protocol():
     # We still need more enviroment variables here
     term = os.environ.get("TERM", "")
@@ -133,7 +124,6 @@ def detect_protocol():
         return "sixel"
     else:
         return "None"
-
 
 def kitty_protocol(buf):
     image_data = buf.getbuffer()
@@ -150,7 +140,6 @@ def kitty_protocol(buf):
 def sixel_protocol(buf):
     writer = sixel.SixelWriter()
     writer.draw(buf)
-
 
 def display_avatar(image_url):
     try:
@@ -176,9 +165,8 @@ def display_avatar(image_url):
             pass
 
     except Exception as e:
-        print("Error:", e)
+        printf("Error: {e}")
         sys.exit(1)
-
 
 def display_user_info(data, starred_count, username):
     github_url = f"{username}@github.com"
@@ -220,11 +208,9 @@ def display_user_info(data, starred_count, username):
 
     print("\n")
 
-
 ## Rendering ASCII
 use_ascii = True
 align_bottom = False
-
 
 def render_ascii(image_url, width=30, style="bold", use_color=True):
     try:
@@ -239,9 +225,6 @@ def render_ascii(image_url, width=30, style="bold", use_color=True):
 
         response = requests.get(image_url)
         image = Image.open(BytesIO(response.content)).convert("L")
-
-        # Auto-size to terminal
-        import os
 
         max_width = os.get_terminal_size().columns - 10
         width = min(width, max_width)
@@ -270,7 +253,6 @@ def render_ascii(image_url, width=30, style="bold", use_color=True):
         print(f"\x1b[31m[!] Error: {e}\x1b[0m", file=sys.stderr)
         return []
 
-
 ## Render Layout
 def render_layout(ascii_lines, info_lines, align="top"):
     max_lines = max(len(ascii_lines), len(info_lines))
@@ -297,7 +279,6 @@ def get_user_info_lines(data, starred_count, username):
     ]
     return [f"{' ' * 2}{url}", " " * 2 + "-" * len(url)] + lines
 
-
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: githubfetch <username> [--ascii[=style]] [--heatmap] [--nocolor]")
@@ -317,6 +298,7 @@ if __name__ == "__main__":
         print("  --nocolor        Disable colored ASCII output")
         print("  --heatmap        Show contribution graph (requires GITHUB_TOKEN)")
         print("  -h, --help       Show this help message")
+        
         sys.exit(0)
 
     username = sys.argv[1]
