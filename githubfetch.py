@@ -144,6 +144,10 @@ def kitty_protocol(buf):
     # C=1 == Cursor movement policy to not to move cursor.
     print(f"\033_Gf=100,a=T,C=1;{encoded}\033\\", end="")
 
+def sixel_protocol(buf):
+    print("\0337", end="")  # Save cursor position
+    writer = sixel.SixelWriter()
+    writer.draw(buf)
 
 def display_avatar(image_url):
     try:
