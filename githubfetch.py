@@ -4,6 +4,7 @@ import requests
 import base64
 import sys
 import os
+import sixel
 from PIL import Image
 from io import BytesIO
 
@@ -123,6 +124,16 @@ def display_contributions(weeks):
     print("\n" + "Less " + "".join(f"{colors[i]}  {reset}" for i in range(5)) + " More")
 
 
+def detect_protocol():
+    term = os.environ.get("TERM", "")
+    if "xterm-kitty" in term or "xterm-ghostty" in term:
+        return "kitty"
+    elif "foot" in term or "xterm" in term:
+        return "sixel"
+    else:
+        return "None"
+
+
 def display_avatar(image_url):
     try:
         # Download the image
@@ -136,17 +147,15 @@ def display_avatar(image_url):
         img = img.resize((180, 180))
 
         buf = BytesIO()
-        img.save(buf, format="PNG")
-        image_data = buf.getvalue()
+        img.save(buf, format="png")
 
-        # Base64 encode
-        encoded = base64.b64encode(image_data).decode("utf-8")
-
-        # Kitty Graphics Protocol
-        # _Gf=100 == PNG
-        # a=T == transmit data and display image
-        # C=1 == Cursor movement policy to not to move cursor.
-        print(f"\033_Gf=100,a=T,C=1;{encoded}\033\\", end="")
+        protocol = detect_protocol()
+        if protocol == "kitty":
+            kitty_protocol(buf)
+        elif protocol == "sixel":
+            sixel_protocol(buf)
+        else:
+            pass
 
     except Exception as e:
         print("Error:", e)
