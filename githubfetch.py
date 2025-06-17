@@ -133,6 +133,17 @@ def detect_protocol():
     else:
         return "None"
 
+def kitty_protocol(buf):
+    image_data = buf.getbuffer()
+    # Base64 encode
+    encoded = base64.b64encode(image_data).decode("utf-8")
+
+    # Kitty Graphics Protocol
+    # _Gf=100 == PNG
+    # a=T == transmit data and display image
+    # C=1 == Cursor movement policy to not to move cursor.
+    print(f"\033_Gf=100,a=T,C=1;{encoded}\033\\", end="")
+
 
 def display_avatar(image_url):
     try:
