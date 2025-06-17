@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
 import requests
-import subprocess
+import base64
 import sys
 import os
 from PIL import Image
 from io import BytesIO
+
 
 class Color:
     def __init__(self):
@@ -16,9 +17,13 @@ class Color:
         self.light_red = "\x1b[38;5;9m"
         self.blue = "\x1b[38;5;21m"
         self.reset = "\x1b[00m"
-    def color(self,color_name,text):
+
+    def color(self, color_name, text):
         return f"{color_name}{text}{color.reset}"
+
+
 color = Color()
+
 
 def get_headers():
     token = os.getenv("GITHUB_TOKEN")
@@ -26,12 +31,16 @@ def get_headers():
         return {}
     return {"Authorization": f"Bearer {token}"}
 
+
 def get_user_data(username):
     user_url = f"https://api.github.com/users/{username}"
     response = requests.get(user_url, headers=get_headers())
     if response.status_code != 200:
-        raise Exception(f"Error: {response.status_code} - {response.json().get('message')}")
+        raise Exception(
+            f"Error: {response.status_code} - {response.json().get('message')}"
+        )
     return response.json()
+
 
 def get_starred_count(username):
     starred_url = f"https://api.github.com/users/{username}/starred"
@@ -39,6 +48,7 @@ def get_starred_count(username):
     if response.status_code != 200:
         return 0
     return len(response.json())
+
 
 def fetch_contributions(username):
     url = "https://api.github.com/graphql"
@@ -59,9 +69,13 @@ def fetch_contributions(username):
       }
     }"""
     variables = {"login": username}
-    resp = requests.post(url, json={"query": query, "variables": variables}, headers=headers)
+    resp = requests.post(
+        url, json={"query": query, "variables": variables}, headers=headers
+    )
     data = resp.json()
-    weeks_data = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
+    weeks_data = data["data"]["user"]["contributionsCollection"][
+        "contributionCalendar"
+    ]["weeks"]
     weeks = []
     for week in weeks_data:
         levels = []
@@ -70,6 +84,7 @@ def fetch_contributions(username):
             levels.append(classify_level(count))
         weeks.append(levels)
     return weeks
+
 
 def classify_level(count):
     if count == 0:
@@ -83,13 +98,14 @@ def classify_level(count):
     else:
         return 4
 
+
 def display_contributions(weeks):
     colors = {
         0: "",  # Dark gray
-        1: "\x1b[48;5;22m",   # Dark green
-        2: "\x1b[48;5;28m",   # Medium green
-        3: "\x1b[48;5;34m",   # Bright green
-        4: "\x1b[48;5;40m",    # Light green
+        1: "\x1b[48;5;22m",  # Dark green
+        2: "\x1b[48;5;28m",  # Medium green
+        3: "\x1b[48;5;34m",  # Bright green
+        4: "\x1b[48;5;40m",  # Light green
     }
     reset = "\x1b[0m"
 
@@ -106,34 +122,67 @@ def display_contributions(weeks):
 
     print("\n" + "Less " + "".join(f"{colors[i]}  {reset}" for i in range(5)) + " More")
 
+
 def display_avatar(image_url):
-    commands = [
-        ["kitten", "icat", "--align", "left", "--scale-up", "--place", "20x20@0x2", image_url],
-        ["kitty", "+kitten", "icat", "--align", "left", "--scale-up", "--place", "20x20@0x2", image_url]
-    ]
+    try:
+        # Download the image
+        response = requests.get(image_url)
+        response.raise_for_status()
 
-    for cmd in commands:
-        try:
-            subprocess.run(cmd, check=True)
-            return  # Success
-        except (FileNotFoundError, subprocess.CalledProcessError):
-            continue  # Try next command
+        # Open the image with pillow
+        img = Image.open(BytesIO(response.content))
 
-    print(color.red, "Kitty Terminal not installed!", color.reset)
-    sys.exit(1)
+        # Resize the image
+        img = img.resize((180, 180))
+
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        image_data = buf.getvalue()
+
+        # Base64 encode
+        encoded = base64.b64encode(image_data).decode("utf-8")
+
+        # Kitty Graphics Protocol
+        # _Gf=100 == PNG
+        # a=T == transmit data and display image
+        # C=1 == Cursor movement policy to not to move cursor.
+        print(f"\033_Gf=100,a=T,C=1;{encoded}\033\\", end="")
+
+    except Exception as e:
+        print("Error:", e)
+        sys.exit(1)
+
 
 def display_user_info(data, starred_count, username):
     github_url = f"{username}@github.com"
     indent = " " * 22
 
     elements = [
-        {"text":color.color(color.light_blue,"Username:"),"value":data.get('login')},
-        {"text":color.color(color.yellow,"Repos:"),"value":data.get('public_repos')},
-        {"text":color.color(color.green,"Bio:"),"value":data.get('bio','N/A') or 'N/A'},
-        {"text":color.color(color.red,"From:"),"value":data.get('location','Not Provided')},
-        {"text":color.color(color.light_red,"Followers:"),"value":data.get('followers')},
-        {"text":color.color(color.light_blue,"Following:"),"value":data.get('following')},
-        {"text":color.color(color.yellow,"Starred repos:"),"value":starred_count},
+        {
+            "text": color.color(color.light_blue, "Username:"),
+            "value": data.get("login"),
+        },
+        {
+            "text": color.color(color.yellow, "Repos:"),
+            "value": data.get("public_repos"),
+        },
+        {
+            "text": color.color(color.green, "Bio:"),
+            "value": data.get("bio", "N/A") or "N/A",
+        },
+        {
+            "text": color.color(color.red, "From:"),
+            "value": data.get("location", "Not Provided"),
+        },
+        {
+            "text": color.color(color.light_red, "Followers:"),
+            "value": data.get("followers"),
+        },
+        {
+            "text": color.color(color.light_blue, "Following:"),
+            "value": data.get("following"),
+        },
+        {"text": color.color(color.yellow, "Starred repos:"), "value": starred_count},
     ]
 
     print(f"{indent} {github_url}")
@@ -149,22 +198,24 @@ def display_user_info(data, starred_count, username):
 use_ascii = True
 align_bottom = False
 
-def render_ascii(image_url, width=30, style='bold', use_color=True):
+
+def render_ascii(image_url, width=30, style="bold", use_color=True):
     try:
         # Dynamic style selection
         styles = {
-            'bold': "@%#*+=-:. "[::-1],
-            'fine': ".,:;i1tfLCG08@"[::-1],
-            'block': " ░▒▓█"[::-1],
-            'retro': " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+            "bold": "@%#*+=-:. "[::-1],
+            "fine": ".,:;i1tfLCG08@"[::-1],
+            "block": " ░▒▓█"[::-1],
+            "retro": " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
         }
-        chars = styles.get(style, styles['bold'])
+        chars = styles.get(style, styles["bold"])
 
         response = requests.get(image_url)
-        image = Image.open(BytesIO(response.content)).convert('L')
+        image = Image.open(BytesIO(response.content)).convert("L")
 
         # Auto-size to terminal
         import os
+
         max_width = os.get_terminal_size().columns - 10
         width = min(width, max_width)
 
@@ -177,7 +228,7 @@ def render_ascii(image_url, width=30, style='bold', use_color=True):
             line = ""
             for x in range(width):
                 pixel = image.getpixel((x, y))
-                char = chars[min(len(chars)-1, pixel * len(chars) // 256)]
+                char = chars[min(len(chars) - 1, pixel * len(chars) // 256)]
 
                 if use_color:
                     color_code = f"\x1b[38;5;{232 + (pixel * 23 // 255)}m"
@@ -192,17 +243,19 @@ def render_ascii(image_url, width=30, style='bold', use_color=True):
         print(f"\x1b[31m[!] Error: {e}\x1b[0m", file=sys.stderr)
         return []
 
+
 ## Render Layout
-def render_layout(ascii_lines, info_lines, align='top'):
+def render_layout(ascii_lines, info_lines, align="top"):
     max_lines = max(len(ascii_lines), len(info_lines))
     pad_ascii = max_lines - len(ascii_lines)
     pad_info = max_lines - len(info_lines)
 
-    ascii_lines += [''] * pad_ascii
-    info_lines += [''] * pad_info
+    ascii_lines += [""] * pad_ascii
+    info_lines += [""] * pad_info
 
     for a, b in zip(ascii_lines, info_lines):
         print(f"{a:<45}  {b}")
+
 
 def get_user_info_lines(data, starred_count, username):
     url = f"{username}@github.com"
@@ -213,17 +266,18 @@ def get_user_info_lines(data, starred_count, username):
         f"{color.color(color.red, 'From:')} {data.get('location') or 'Not Provided'}",
         f"{color.color(color.light_red, 'Followers:')} {data.get('followers')}",
         f"{color.color(color.light_blue, 'Following:')} {data.get('following')}",
-        f"{color.color(color.yellow, 'Starred repos:')} {starred_count}"
+        f"{color.color(color.yellow, 'Starred repos:')} {starred_count}",
     ]
-    return [f"{' ' * 2}{url}", ' ' * 2 + '-' * len(url)] + lines
+    return [f"{' ' * 2}{url}", " " * 2 + "-" * len(url)] + lines
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: githubfetch <username> [--ascii[=style]] [--heatmap] [--nocolor]")
         print("Available styles: bold, fine, block, sketch, invert, minimal, retro")
         sys.exit(1)
 
-    if sys.argv[1] in ['--help', '-h']:
+    if sys.argv[1] in ["--help", "-h"]:
         print("GitHub User Fetcher with Enhanced ASCII Art")
         print("Usage: githubfetch <username> [options]")
         print("\nOptions:")
@@ -239,43 +293,47 @@ if __name__ == '__main__':
         sys.exit(0)
 
     username = sys.argv[1]
-    heatmap = '--heatmap' in sys.argv
-    use_color = '--nocolor' not in sys.argv
+    heatmap = "--heatmap" in sys.argv
+    use_color = "--nocolor" not in sys.argv
 
     # Parse ASCII style
-    ascii_style = 'bold'
+    ascii_style = "bold"
     for arg in sys.argv:
-        if arg.startswith('--ascii='):
-            ascii_style = arg.split('=')[1].lower()
-        elif arg == '--ascii':
-            ascii_style = 'bold'  # default
+        if arg.startswith("--ascii="):
+            ascii_style = arg.split("=")[1].lower()
+        elif arg == "--ascii":
+            ascii_style = "bold"  # default
 
     try:
         user_data = get_user_data(username)
         starred_count = get_starred_count(username)
 
-        if '--ascii' in sys.argv or any(a.startswith('--ascii=') for a in sys.argv):
+        if "--ascii" in sys.argv or any(a.startswith("--ascii=") for a in sys.argv):
             ascii_block = render_ascii(
-                user_data.get('avatar_url'),
-                style=ascii_style,
-                use_color=use_color
+                user_data.get("avatar_url"), style=ascii_style, use_color=use_color
             )
             info_block = get_user_info_lines(user_data, starred_count, username)
             render_layout(ascii_block, info_block)
         else:
             if use_color:
-                display_avatar(user_data.get('avatar_url'))
+                display_avatar(user_data.get("avatar_url"))
             else:
                 # Display grayscale avatar if --nocolor
-                img = Image.open(BytesIO(requests.get(user_data.get('avatar_url')).content).convert('L'))
+                img = Image.open(
+                    BytesIO(requests.get(user_data.get("avatar_url")).content).convert(
+                        "L"
+                    )
+                )
                 img.show()
-
             display_user_info(user_data, starred_count, username)
 
         if heatmap:
             token = os.getenv("GITHUB_TOKEN")
             if not token:
-                print("\x1b[33mWarning: GITHUB_TOKEN not set. Skipping heatmap.\x1b[0m", file=sys.stderr)
+                print(
+                    "\x1b[33mWarning: GITHUB_TOKEN not set. Skipping heatmap.\x1b[0m",
+                    file=sys.stderr,
+                )
             else:
                 contributions = fetch_contributions(username)
                 display_contributions(contributions)
