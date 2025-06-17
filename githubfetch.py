@@ -3,6 +3,8 @@
 import requests
 import base64
 import sys
+import termios
+import tty
 import os
 import sixel
 from PIL import Image
@@ -125,6 +127,7 @@ def display_contributions(weeks):
 
 
 def detect_protocol():
+    # We still need more enviroment variables here
     term = os.environ.get("TERM", "")
     if "xterm-kitty" in term or "xterm-ghostty" in term:
         return "kitty"
@@ -132,6 +135,7 @@ def detect_protocol():
         return "sixel"
     else:
         return "None"
+
 
 def kitty_protocol(buf):
     image_data = buf.getbuffer()
@@ -144,10 +148,11 @@ def kitty_protocol(buf):
     # C=1 == Cursor movement policy to not to move cursor.
     print(f"\033_Gf=100,a=T,C=1;{encoded}\033\\", end="")
 
+
 def sixel_protocol(buf):
-    print("\0337", end="")  # Save cursor position
     writer = sixel.SixelWriter()
     writer.draw(buf)
+
 
 def display_avatar(image_url):
     try:
