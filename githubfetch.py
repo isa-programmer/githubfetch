@@ -165,7 +165,7 @@ def display_avatar(image_url):
             pass
 
     except Exception as e:
-        printf("Error: {e}")
+        print("Error: {e}")
         sys.exit(1)
 
 def display_user_info(data, starred_count, username):
