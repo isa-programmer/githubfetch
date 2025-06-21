@@ -329,7 +329,7 @@ if __name__ == "__main__":
             render_layout(ascii_block, info_block)
         else:
             if use_color:
-                ascii_block = display_avatar(user_data.get("avatar_url"), use_color=use_color)
+                ascii_block = display_avatar(user_data.get("avatar_url"))
                 if ascii_block:
                     info_block = get_user_info_lines(user_data, starred_count, username)
                     render_layout(ascii_block, info_block)
