@@ -159,14 +159,18 @@ def display_avatar(image_url):
         protocol = detect_protocol()
         if protocol == "kitty":
             kitty_protocol(buf)
+            return None
         elif protocol == "sixel":
             sixel_protocol(buf)
+            return None
         else:
-            pass
+            raise RuntimeError("Unsupported terminal for image rendering")
 
     except Exception as e:
-        print("Error: {e}")
-        sys.exit(1)
+        print(f"\x1b[33m[SIXEL/Kitty failed: {e}] Falling back to ASCII\x1b[0m", file=sys.stderr)
+        return render_ascii(image_url, style="bold", use_color=use_color)
+
+
 
 def display_user_info(data, starred_count, username):
     github_url = f"{username}@github.com"
@@ -298,7 +302,7 @@ if __name__ == "__main__":
         print("  --nocolor        Disable colored ASCII output")
         print("  --heatmap        Show contribution graph (requires GITHUB_TOKEN)")
         print("  -h, --help       Show this help message")
-        
+
         sys.exit(0)
 
     username = sys.argv[1]
@@ -325,16 +329,19 @@ if __name__ == "__main__":
             render_layout(ascii_block, info_block)
         else:
             if use_color:
-                display_avatar(user_data.get("avatar_url"))
+                ascii_block = display_avatar(user_data.get("avatar_url"), use_color=use_color)
+                if ascii_block:
+                    info_block = get_user_info_lines(user_data, starred_count, username)
+                    render_layout(ascii_block, info_block)
+                else:
+                    display_user_info(user_data, starred_count, username)
             else:
-                # Display grayscale avatar if --nocolor
                 img = Image.open(
-                    BytesIO(requests.get(user_data.get("avatar_url")).content).convert(
-                        "L"
-                    )
-                )
+                    BytesIO(requests.get(user_data.get("avatar_url")).content)
+                ).convert("L")
                 img.show()
-            display_user_info(user_data, starred_count, username)
+                display_user_info(user_data, starred_count, username)
+
 
         if heatmap:
             token = os.getenv("GITHUB_TOKEN")
