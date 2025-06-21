@@ -95,25 +95,25 @@ docker run -it --env-file .env ghcr.io/isa-programmer/githubfetch:latest <github
 
 ## ⚙️ Options & Flags
 
-### 🔹 Basic Info
+### Basic Info
 
 ```bash
 githubfetch <github-username>
 ```
 
-### 🔹 With ASCII Avatar
+### With ASCII Avatar
 
 ```bash
 githubfetch <github-username> --ascii[=style]
 ```
 
-### 🔹 With Contribution Heatmap
+### With Contribution Heatmap
 
 ```bash
 githubfetch <github-username> --heatmap
 ```
 
-### 🔹 ASCII Styles
+### ASCII Styles
 
 | Style   | Description               | Example Characters   |
 | ------- | ------------------------- | -------------------- |
@@ -186,4 +186,8 @@ Contributions, issues and feature requests are welcome!
 ## Example output
 ![example image](https://i.imgur.com/NdmszFZ.png)
 
-![another example](https://imgur.com/KW47JGm.png)
+<!-- ![another example](https://imgur.com/KW47JGm.png) -->
+
+![heatmap](Assets/image.png)
+
+![my-heatmap](Assets/my-heatmap.png)
